@@ -72,11 +72,11 @@ def setup_network():
     firewall.cmd('ifconfig fw-eth1 192.168.5.1/24 up')  # Interface externa
     firewall.cmd('ifconfig lo 127.0.0.1 up')
     
-    # Conectar à internet real COM SEGURANÇA
-    connect_to_internet_safe(net, external_switch)
+    # Conectar à internet real
+    connect_to_internet(net, external_switch)
     
     # Configurar DNS COM ARQUIVOS TEMPORÁRIOS
-    setup_dns_safe(internal_hosts, external_hosts, firewall)
+    setup_dns(internal_hosts, external_hosts, firewall)
     
     # Configurar servidor web para testes
     net.get('h6').cmd('python3 -m http.server 80 > /tmp/webserver_h6.log 2>&1 &')
@@ -87,11 +87,11 @@ def setup_network():
     # Aguardar estabilização
     time.sleep(2)
     
-    # Iniciar captura de pacotes com segurança
-    start_tcpdump_safe(firewall)
+    # Iniciar captura de pacotes
+    start_tcpdump(firewall)
     
     # Executar testes
-    run_tests_safe(net)
+    run_tests(net)
     
     info('*** Topologia configurada com sucesso!\n')
     info('*** Use a CLI para testes manuais\n')
@@ -100,10 +100,10 @@ def setup_network():
     CLI(net)
     
     # Limpeza SEGURA
-    cleanup_safe(net)
+    cleanup(net)
     net.stop()
 
-def connect_to_internet_safe(net, external_switch):
+def connect_to_internet(net, external_switch):
     """Conecta a rede externa à internet real SEM afetar configurações do host"""
     info('*** Conectando à internet (modo seguro)\n')
 
@@ -130,14 +130,14 @@ def connect_to_internet_safe(net, external_switch):
     # Ativar roteamento apenas para a simulação
     os.system('sudo sysctl -w net.ipv4.ip_forward=1 > /dev/null')
 
-    # Configurar NAT do host físico de forma ISOLADA
+    # Configurar NAT do host físico
     # Chain específica para fácil remoção
     os.system('sudo iptables -t nat -N MININET_NAT 2>/dev/null || true')
     os.system('sudo iptables -t nat -F MININET_NAT')
     os.system(f'sudo iptables -t nat -I POSTROUTING 1 -s {MININET_EXTERNAL_NET} -o {PHYSICAL_IF} -j MININET_NAT')
     os.system('sudo iptables -t nat -A MININET_NAT -j MASQUERADE')
 
-    # Chain específica para FORWARD rules - APENAS para rede 192.168.5.0/24
+    # Chain específica para FORWARD rules - para rede 192.168.5.0/24
     os.system('sudo iptables -N MININET_FORWARD 2>/dev/null || true')
     os.system('sudo iptables -F MININET_FORWARD')
     os.system('sudo iptables -I FORWARD 1 -j MININET_FORWARD')
@@ -153,7 +153,7 @@ def connect_to_internet_safe(net, external_switch):
     os.system(f'sudo ip route replace 10.0.0.0/28 via 192.168.5.1 dev {VETH_HOST_NAME}')
     
 
-def setup_dns_safe(internal_hosts, external_hosts, firewall):
+def setup_dns(internal_hosts, external_hosts, firewall):
     """Configura servidor DNS usando apenas arquivos temporários"""
     info('*** Configurando DNS (arquivos temporários)\n')
     
@@ -258,24 +258,24 @@ def setup_firewall_rules(fw):
     info('*** Regras do firewall aplicadas:\n')
     print(fw.cmd('iptables -L FORWARD -v -n'))
 
-def start_tcpdump_safe(firewall):
-    """Inicia captura tcpdump com arquivos temporários e PID files"""
-    info('*** Iniciando captura de pacotes no firewall (modo seguro)\n')
+def start_tcpdump(firewall):
+    """Inicia captura tcpdump"""
+    info('*** Iniciando captura de pacotes no firewalln')
     
     # Parar capturas anteriores
     firewall.cmd('pkill tcpdump || true')
     
     # Iniciar capturas com PID files
-    firewall.cmd('tcpdump -i fw-eth0 -w /tmp/fw-eth0.pcap & echo $! > /tmp/tcpdump-eth0.pid')
-    firewall.cmd('tcpdump -i fw-eth1 -w /tmp/fw-eth1.pcap & echo $! > /tmp/tcpdump-eth1.pid')
+    firewall.cmd('tcpdump -i fw-eth0 -w ./fw-eth0.pcap &')
+    firewall.cmd('tcpdump -i fw-eth1 -w ./fw-eth1.pcap &')
     
     info('*** Captura iniciada (arquivos em /tmp/fw-eth*.pcap)\n')
 
-def run_tests_safe(net):
+def run_tests(net):
     """Executa testes automatizados sem afetar configurações do host"""
-    h1, h2, h5, h6 = net.get('h1', 'h2', 'h5', 'h6')
+    h1, h6 = net.get('h1', 'h6')
     
-    info('\n=== TESTES AUTOMATIZADOS (MODO SEGURO) ===\n')
+    info('\n=== TESTES AUTOMATIZADOS===\n')
     
     # Teste 1: ICMP interno permitido
     info('Teste 1: Ping interno (h1 -> h2) - DEVE FUNCIONAR\n')
@@ -312,15 +312,15 @@ def run_tests_safe(net):
     result = h1.cmd('nslookup google.com 10.0.0.1')
     info('✓ Sucesso\n') if 'Name:' in result else info('✗ Falha\n')
     
-    # Teste 8: h5 (externo) pode acessar YouTube
-    info('Teste 8: h5 (externo) acessando YouTube - DEVE FUNCIONAR\n')
+    # Teste 8: h5 pode acessar YouTube
+    info('Teste 8: h5 acessando YouTube - DEVE FUNCIONAR\n')
     result = h5.cmd('curl -s --connect-timeout 10 -I http://youtube.com/')
     info('✓ Sucesso\n') if 'HTTP' in result else info('✗ Falha\n')
     
     info('\n=== TESTES CONCLUÍDOS ===\n')
 
-def cleanup_safe(net):
-    """Remove APENAS as configurações criadas pelo script"""
+def cleanup(net):
+    """Remove as configurações criadas pelo script"""
     info('*** Iniciando limpeza segura\n')
     
     # Parar capturas tcpdump no firewall
