@@ -113,17 +113,17 @@ sudo python3 topo.py
 ## 📊 Firewall Rules
 
 **INPUT Chain**
-Accept localhost traffic
-Accept established/related connections
-Accept ICMP echo requests
-Accept DNS and SSH from internal network
+- Accept localhost traffic
+- Accept established/related connections
+- Accept ICMP echo requests
+- Accept DNS and SSH from internal network
 
 **FORWARD Chain**
-Allow ICMP within internal network
-Block ICMP from internal to external
-Allow HTTP/HTTPS from internal to external
-Allow DNS from internal to external
-Accept established connections
+- Allow ICMP within internal network
+- Block ICMP from internal to external
+- Allow HTTP/HTTPS from internal to external
+- Allow DNS from internal to external
+- Accept established connections
 
 **NAT**
 
@@ -142,9 +142,9 @@ Masquerading for internal network traffic
 
 ### During execution, the following files are created:
 
-fw-eth0.pcap – Firewall internal interface capture
-fw-eth1.pcap – Firewall external interface capture
-/tmp/dnsmasq-fw.log – DNS server logs
+- fw-eth0.pcap – Firewall internal interface capture
+- fw-eth1.pcap – Firewall external interface capture
+- /tmp/dnsmasq-fw.log – DNS server logs
 
 Temporary configuration files in /tmp/
 
@@ -152,18 +152,18 @@ Temporary configuration files in /tmp/
 
 ### After automated tests, the Mininet CLI is available:
 
-mininet> h1 ping h2
-mininet> h1 ping h5
-mininet> h1 curl http://192.168.5.20:80
-mininet> h1 nslookup youtube.com 10.0.0.1
+- mininet> h1 ping h2
+- mininet> h1 ping h5
+- mininet> h1 curl http://192.168.5.20:80
+- mininet> h1 nslookup youtube.com 10.0.0.1
 
 ## 🧹 Cleanup Process
 ### The script automatically:
-Stops tcpdump and dnsmasq
-Removes virtual interfaces
-Deletes custom iptables chains
-Removes temporary files
-Restores original IP forwarding settings
+- Stops tcpdump and dnsmasq
+- Removes virtual interfaces
+- Deletes custom iptables chains
+- Removes temporary files
+- Restores original IP forwarding settings
 
 ## ⚠️ Troubleshooting
 ### Common Issues:
@@ -187,10 +187,10 @@ if __name__ == '__main__':
 
 📚 Learning Resources
 
-Mininet Documentation
-iptables Tutorial
-DNS Masquerading with dnsmasq
-Network Security Fundamentals
+- Mininet Documentation
+- iptables Tutorial
+- DNS Masquerading with dnsmasq
+- Network Security Fundamentals
 
 👥 Contributing
 
